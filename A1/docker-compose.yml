@@ -1,0 +1,26 @@
+services:
+  service1:
+    image: nandkadivar2101/application1_image
+    container_name: kadivar_container1
+    volumes:
+      - .:/application/storage
+    ports:
+      - 6000:6000
+    networks:
+      - network1
+
+  service2:
+    image: nandkadivar2101/application2_image
+    container_name: kadivar_container2
+    depends_on:
+      - service1
+    volumes:
+      - .:/application/storage
+    ports:
+      - 7000:7000
+    networks:
+      - network1
+networks:
+   network1:
+    external: false
+    name: kadivar_network1
