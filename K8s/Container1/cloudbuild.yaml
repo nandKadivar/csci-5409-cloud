@@ -1,0 +1,38 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build','-t','us-central1-docker.pkg.dev/csci5409-b00929627/my-artifect-registory/container1_image','.']
+  - name: gcr.io/cloud-builders/docker
+    args: ['push','us-central1-docker.pkg.dev/csci5409-b00929627/my-artifect-registory/container1_image']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['config', 'set', 'project', 'csci5409-b00929627']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['config', 'set', 'compute/zone', 'us-central1-a']
+  - name: gcr.io/cloud-builders/gcloud
+    args: ['container','clusters','get-credentials','b00929627-kubernetes-cluster']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['container','clusters','get-credentials','b00929627-kubernetes-cluster','--zone','us-central1-a','--project','csci5409-b00929627']
+  - name: gcr.io/cloud-builders/kubectl
+    args: ['apply','-f','PersistenceVolumeClaim.yaml']
+    id: createPV
+    env:
+      - 'CLOUDSDK_CONTAINER_CLUSTER=b00929627-kubernetes-cluster'    
+  - name: gcr.io/cloud-builders/kubectl
+    args: ['apply','-f','ClusterPod.yaml']
+    id: createPod
+    env:
+      - 'CLOUDSDK_CONTAINER_CLUSTER=b00929627-kubernetes-cluster'
+  - name: gcr.io/cloud-builders/kubectl
+    args: ['delete','pod','cluster-pod']
+    id: deletePod
+    env:
+      - 'CLOUDSDK_CONTAINER_CLUSTER=b00929627-kubernetes-cluster'
+  - name: gcr.io/cloud-builders/kubectl
+    args: ['apply','-f','ClusterPod.yaml']
+    id: reloadPod
+    env:
+      - 'CLOUDSDK_CONTAINER_CLUSTER=b00929627-kubernetes-cluster'
+  - name: gcr.io/cloud-builders/kubectl
+    args: ['apply','-f','CreateService.yaml']
+    id: createService
+    env:
+      - 'CLOUDSDK_CONTAINER_CLUSTER=b00929627-kubernetes-cluster'

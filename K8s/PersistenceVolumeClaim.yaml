@@ -1,0 +1,12 @@
+# Reference: https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes#dynamic_provisioning
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: persistence-volume-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard

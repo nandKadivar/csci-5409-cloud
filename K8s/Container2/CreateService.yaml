@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - name: container1-port
+      protocol: TCP
+      port: 6000
+      targetPort: 6000
+    - name: container2-port
+      protocol: TCP
+      port: 7000
+      targetPort: 7000
+  type: LoadBalancer

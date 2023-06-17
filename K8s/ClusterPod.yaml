@@ -1,0 +1,35 @@
+# reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cluster-pod
+  labels:
+    app: my-app
+spec:
+  tolerations:
+    - key: special
+      operator: Exists
+      effect: NoSchedule
+
+  containers:
+    - name: kadivar-container1
+      image: us-central1-docker.pkg.dev/csci5409-b00929627/my-artifect-registory/container1_image:latest
+      volumeMounts:
+        - name: pvc
+          mountPath: /application/Nandkumar_PV_dir
+      ports:
+        - containerPort: 6000
+          protocol: TCP
+
+    - name: kadivar-container2
+      image: us-central1-docker.pkg.dev/csci5409-b00929627/my-artifect-registory/container2_image:latest
+      volumeMounts:
+        - name: pvc
+          mountPath: /application/Nandkumar_PV_dir
+      ports:
+        - containerPort: 7000
+          protocol: TCP
+  volumes:
+    - name: pvc
+      persistentVolumeClaim:
+        claimName: persistence-volume-claim
