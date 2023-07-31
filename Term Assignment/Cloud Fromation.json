@@ -1,0 +1,1247 @@
+{
+    "Resources": {
+        "TransactionsTable": {
+            "Type":"AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "transactions",
+                "AttributeDefinitions": [
+                    {
+                      "AttributeName": "id",
+                      "AttributeType": "N"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                }
+            }
+        },
+        "AlertsTable": {
+            "Type":"AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "alerts",
+                "AttributeDefinitions": [
+                    {
+                      "AttributeName": "id",
+                      "AttributeType": "N"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                }
+            }
+        },
+        "CategoriesTable": {
+            "Type":"AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "categories",
+                "AttributeDefinitions": [
+                    {
+                      "AttributeName": "id",
+                      "AttributeType": "N"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                }
+            }
+        },
+        "JwtTokensTable": {
+            "Type":"AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "jwt_tokens",
+                "AttributeDefinitions": [
+                    {
+                      "AttributeName": "user_id",
+                      "AttributeType": "N"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "user_id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                }
+            }
+        },
+        "UsersTable": {
+            "Type":"AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "users",
+                "AttributeDefinitions": [
+                    {
+                      "AttributeName": "id",
+                      "AttributeType": "N"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                }
+            }
+        },
+        
+        "ReminderSNSTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "DisplayName": "ReminderTopic"
+            }
+        },
+        "ReminderSubscription": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+                "TopicArn": { "Ref": "ReminderSNSTopic" },
+                "Protocol": "email",
+                "Endpoint": "kadivarnand007@gmail.com"
+            }
+        },
+        
+        "ReminderEvent": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+              "ScheduleExpression": "cron(0 21 * * ? *)",
+              "State": "ENABLED",
+              "Targets": [
+                {
+                  "Arn": { "Ref": "ReminderSNSTopic" },
+                  "Id": "MySnsTopicTarget",
+                  "Input": "{\"Message\": \"Did you record todays transaction?\"}"
+                }
+              ]
+            },
+            "DependsOn": "ReminderSubscription"
+        },
+
+        "AlertMonitor": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "AlertMonitor",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Alert/AlertMonitor/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole",
+                "Environment": {
+                    "Variables": {
+                        "SNS_ARN": { "Ref": "ReminderSNSTopic" }
+                    }
+                }
+            }
+        },
+        "CreateAlert": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "CreateAlert",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Alert/CreateAlert/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+        "DeleteAlert": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "DeleteAlert",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Alert/DeleteAlert/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+        "GetAlert": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "GetAlert",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Alert/GetAlert/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+        "updateAlert": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "updateAlert",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Alert/UpdateAlert/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+
+        "UpdateCategory": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "UpdateCategory",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Category/UpdateCategory/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+
+
+        "deleteCategory": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "deleteCategory",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Category/DeleteCategory/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+
+        "Category": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "Category",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Category/CreateCategory/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+
+        "GetCategory": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "GetCategory",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Category/GetCategory/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+
+        "Login": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "Login",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Login/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+
+        "Registration": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "Registration",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Timeout": 10,
+                "Environment": {
+                    "Variables": {
+                      "API_GATEWAY_ID": { "Ref": "gateway" },
+                      "API_GATEWAY_REGION": "us-east-1"
+                    }
+                },
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Registration/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            },
+            "DependsOn": "gateway"
+        },
+
+        "SendReminders": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "SendReminders",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "SendReminders/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+
+        "updateTransaction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "updateTransaction",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Transaction/UpdateTransaction/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+        "createTransaction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "CreateTransaction",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Transaction/CreateTransaction/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+        "deleteTransaction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "DeleteTransaction",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Transaction/DeleteTransaction/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+        "getTransaction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "getTransaction",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "Transaction/GetTransaction/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+        "VerifyEmail": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "VerifyEmail",
+                "Runtime": "nodejs14.x",
+                "Handler": "index.handler",
+                "Code": {
+                    "S3Bucket": "term-assignment-lambda-code",
+                    "S3Key": "VerifyEmail/index.zip"
+                },
+                "Role": "arn:aws:iam::310079365732:role/LabRole"
+            }
+        },
+    
+        "gateway": {
+            "Type": "AWS::ApiGatewayV2::Api",
+            "Properties": {
+                "Name" : "gateway",
+                "ProtocolType": "HTTP",
+                "CorsConfiguration": {
+                    "AllowOrigins": ["http://localhost:3000","*"],
+                    "AllowHeaders": ["content-type","authorization"],
+                    "AllowMethods" : ["POST","GET","PUT","DELETE"]
+                }
+            }
+        },
+
+        "lambdaPermissionCreateAlert": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "CreateAlert" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionDeleteAlert": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "DeleteAlert" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionGetAlert": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "GetAlert" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionUpdateAlert": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "updateAlert" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionAlertMonitor": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "AlertMonitor" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        
+        "lambdaPermissionUpdateTransaction": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "updateTransaction" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionCreateTransaction": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "createTransaction" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionDeleteTransaction": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "deleteTransaction" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionGetTransaction": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "getTransaction" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        
+        "lambdaPermissionVerifyEmail": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "VerifyEmail" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionLogin": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "Login" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionRegistration": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "Registration" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+
+        "lambdaPermissionSendReminders": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "SendReminders" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+
+        "lambdaPermissionUpdateCategory": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "UpdateCategory" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionDeleteCategory": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "deleteCategory" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionCategory": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "Category" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+        "lambdaPermissionGetCategory": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": { "Ref": "GetCategory" },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":",
+                    { "Ref": "gateway" },
+                    "/*/*"
+                  ]
+                ]
+              }
+            },
+            "DependsOn" : "gateway"
+        },
+
+
+
+
+
+        "gatewayIntegrationAlertMonitor": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["AlertMonitor", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionAlertMonitor"
+        },
+        "gatewayIntegrationUpdateAlert": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["updateAlert", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionUpdateAlert"
+        },
+        "gatewayIntegrationGetAlert": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["GetAlert", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionGetAlert"
+        },
+        "gatewayIntegrationDeleteAlert": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["DeleteAlert", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionDeleteAlert"
+        },
+        "gatewayIntegrationCreateAlert": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["CreateAlert", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionCreateAlert"
+        },
+        "gatewayIntegrationGetTransaction": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["getTransaction", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionGetTransaction"
+        },
+        "gatewayIntegrationDeleteTransaction": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["deleteTransaction", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionDeleteTransaction"
+        },
+        "gatewayIntegrationCreateTransaction": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["createTransaction", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionCreateTransaction"
+        },
+        "gatewayIntegrationUpdateTransaction": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["updateTransaction", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionUpdateTransaction"
+        },
+        "gatewayIntegrationRegistration": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["Registration", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionRegistration"
+        },
+        "gatewayIntegrationLogin": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["Login", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionLogin"
+        },
+        "gatewayIntegrationVerifyEmail": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["VerifyEmail", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionVerifyEmail"
+        },
+        "gatewayIntegrationSendReminders": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["SendReminders", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionSendReminders"
+        },
+        "gatewayIntegrationGetCategory": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["GetCategory", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionGetCategory"
+        },
+        "gatewayIntegrationCategory": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["Category", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionCategory"
+        },
+        "gatewayIntegrationDeleteCategory": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["deleteCategory", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionDeleteCategory"
+        },
+        "gatewayIntegrationUpdateCategory": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": { 
+                "Fn::Join": ["", ["arn:aws:apigateway:", { "Ref": "AWS::Region" }, ":lambda:path/2015-03-31/functions/", { "Fn::GetAtt": ["UpdateCategory", "Arn"] }, "/invocations"]] 
+                },
+              "IntegrationMethod": "POST",
+              "PayloadFormatVersion": "2.0"
+            },
+            "DependsOn" : "lambdaPermissionUpdateCategory"
+        },
+
+        "gatewayRouteAlertMonitor": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /alert/monitor",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationAlertMonitor" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationAlertMonitor"
+        },
+        "gatewayRouteUpdateAlert": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "PUT /alert/update",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationUpdateAlert" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationUpdateAlert"
+        },
+        "gatewayRouteDeleteAlert": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /alert/delete",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationDeleteAlert" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationDeleteAlert"
+        },
+        "gatewayRouteGetAlert": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "GET /alert/get",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationGetAlert" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationDeleteAlert"
+        },
+        "gatewayRouteCreateAlert": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /alert/create",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationCreateAlert" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationCreateAlert"
+        },
+        "gatewayRouteGetTransaction": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "GET /transaction/get",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationGetTransaction" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationGetTransaction"
+        },
+        "gatewayRouteDeleteTransaction": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /transaction/delete",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationDeleteTransaction" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationDeleteTransaction"
+        },
+        "gatewayRouteCreateTransaction": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /transaction/create",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationCreateTransaction" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationCreateTransaction"
+        },
+        "gatewayRouteUpdateTransaction": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "PUT /transaction/update",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationUpdateTransaction" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationUpdateTransaction"
+        },
+        "gatewayRouteRegistration": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /register",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationRegistration" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationRegistration"
+        },
+        "gatewayRouteLogin": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /login",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationLogin" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationLogin"
+        },
+        "gatewayRouteVerifyEmail": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "GET /verifyemail",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationVerifyEmail" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationVerifyEmail"
+        },
+        "gatewayRouteSendReminders": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /send-reminders",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationSendReminders" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationSendReminders"
+        },
+        "gatewayRouteGetCategory": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "GET /category/get",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationGetCategory" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationGetCategory"
+        },
+        "gatewayRouteCategory": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /category/create",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationCategory" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationCategory"
+        },
+        "gatewayRouteDeleteCategory": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "POST /category/delete",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationDeleteCategory" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationDeleteCategory"
+        },
+        "gatewayRouteUpdateCategory": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "RouteKey": "PUT /category/update",
+              "Target": { "Fn::Join": ["/", ["integrations", { "Ref": "gatewayIntegrationUpdateCategory" }]] }
+            },
+            "DependsOn" : "gatewayIntegrationUpdateCategory"
+        },
+
+        "gatewayStage": {
+            "Type": "AWS::ApiGatewayV2::Stage",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" },
+              "DeploymentId": { "Ref": "gatewayDeployment" },
+              "StageName": "default",
+              "AutoDeploy": true
+            },
+            "DependsOn" : "gatewayDeployment"
+        },
+        "gatewayDeployment": {
+            "Type": "AWS::ApiGatewayV2::Deployment",
+            "Properties": {
+              "ApiId": { "Ref": "gateway" }
+            },
+            "DependsOn" : ["gatewayRouteAlertMonitor","gatewayRouteUpdateAlert","gatewayRouteDeleteAlert","gatewayRouteGetAlert","gatewayRouteCreateAlert","gatewayRouteGetTransaction","gatewayRouteDeleteTransaction","gatewayRouteCreateTransaction","gatewayRouteUpdateTransaction","gatewayRouteRegistration","gatewayRouteLogin","gatewayRouteVerifyEmail","gatewayRouteSendReminders","gatewayRouteGetCategory","gatewayRouteCategory","gatewayRouteDeleteCategory","gatewayRouteUpdateCategory"]
+        },
+
+        "InstanceProfile" : {
+            "Type" : "AWS::IAM::InstanceProfile",
+            "Properties" : {
+              "Path" : "/",
+              "Roles" : ["LabRole"]
+            }
+        },
+          "Instance1": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+              "InstanceType": "t2.medium",
+              "ImageId": "ami-05548f9cecf47b442",
+              "KeyName": "ex2-keypair",
+              "IamInstanceProfile" : {"Ref" : "InstanceProfile"},
+              "UserData": {
+                "Fn::Base64": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "#!/bin/bash -xe\n",
+                      "sudo yum update -y\n",
+                      "sudo yum install -y httpd\n",
+                      "sudo yum install -y unzip\n",
+                      "sudo service httpd start\n",
+                      "sudo chkconfig httpd on\n",
+                      "sudo yum install -y nodejs\n",
+                      "sudo yum install -y npm\n",
+                      "sudo npm install -g pm2\n",
+                      "aws s3 cp s3://term-assignment-lambda-code/frontend.zip /var/www/html\n",
+                      "unzip /var/www/html/frontend.zip -d /var/www/html/application\n",
+                      "cd /var/www/html\n",
+                      "cd application/\n",
+                      "sudo chown ec2-user .env\n",
+                      "sudo echo \"REACT_APP_API_GATEWAY=https://",{"Ref": "gateway"},".execute-api.",{"Ref": "AWS::Region"},".amazonaws.com/default\" >> .env\n",
+                      "sudo npm install\n",
+                      "sudo pm2 start npm --name 'frontend' -- start\n",
+                      "sudo pm2 save"
+                    ]
+                  ]
+                }
+              }
+            },
+            "DependsOn": ["gateway"]
+        }
+    },
+    "Outputs": {
+      "PublicIP": {
+        "Value": { "Fn::GetAtt": ["Instance1", "PublicIp"] },
+        "Description": "Public IP of the EC2 instance"
+      }
+    }
+}
